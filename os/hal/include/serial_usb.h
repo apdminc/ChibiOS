@@ -58,6 +58,15 @@
 #define CDC_GET_RINGER_PARMS            0x31
 #define CDC_SET_OPERATION_PARMS         0x32
 #define CDC_GET_OPERATION_PARMS         0x33
+#define CDC_SET_LINE_PARMS              0x34
+#define CDC_GET_LINE_PARMS              0x35
+#define CDC_DIAL_DIGITS                 0x36
+#define CDC_SET_UNIT_PARAMETER          0x37
+#define CDC_GET_UNIT_PARAMETER          0x38
+#define CDC_CLEAR_UNIT_PARAMETER        0x39
+#define CDC_GET_PROFILE                 0x3A
+
+
 /** @} */
 
 /**
