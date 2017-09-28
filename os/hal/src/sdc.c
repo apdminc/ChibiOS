@@ -321,20 +321,21 @@ bool_t sdcConnect(SDCDriver *sdcp) {
   case SDC_MODE_CARDTYPE_MMC:
     /* EXT_CSD
      *
+     * access: write 0x03
      * index: MMCSD_EXT_CSD_BUS_WIDTH (183,0xB7)
      * value: 4bit 0x01, 8bit 0x02
      *
-     * 0x0000B70100 - 4bit
-     * 0x0000B70200 - 8bit
+     * 0x03B70100 - 4bit
+     * 0x03B70200 - 8bit
      */
 #if SDC_BUS_WIDTH == 4
-    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SWITCH, 0x0000B70100, resp) ||
+    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SWITCH, 0x03B70100, resp) ||
         MMCSD_R1_MMC_ERROR(resp[0]))
       goto failed;
     sdc_lld_set_bus_mode(sdcp, SDC_MODE_4BIT);
 #endif
 #if SDC_BUS_WIDTH == 8
-    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SWITCH, 0x0000B70200, resp) ||
+    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SWITCH, 0x03B70200, resp) ||
         MMCSD_R1_MMC_ERROR(resp[0]))
       goto failed;
     sdc_lld_set_bus_mode(sdcp, SDC_MODE_8BIT);
