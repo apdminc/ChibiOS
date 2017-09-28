@@ -103,6 +103,14 @@
 #if !defined(SDC_BUS_WIDTH) || defined(__DOXYGEN__)
 #define SDC_BUS_WIDTH                   4
 #endif
+
+/**
+ * @brief   Assigned relative card address.
+ * @note    16bit value
+ */
+#if !defined(SDC_RELATIVE_CARD_ADDRESS) || defined(__DOXYGEN__)
+#define SDC_RELATIVE_CARD_ADDRESS       1
+#endif
 /** @} */
 
 /*===========================================================================*/
