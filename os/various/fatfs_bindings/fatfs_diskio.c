@@ -242,7 +242,13 @@ DRESULT disk_write (
     }
     if (sdcWrite(&SDCD1, sector, buff, count)) {
       error_log_emmc_disk_io(RES_ERROR, 'W');
-      return RES_ERROR;
+
+      if (sdcWrite(&SDCD1, sector, buff, count)) {
+        error_log_emmc_disk_io(RES_ERROR, 'W');
+        return RES_ERROR;
+      } else {
+        error_log_emmc_disk_io(RES_OK, 'W');
+      }
     }
     const systime_t end_time = chTimeNow();
 
