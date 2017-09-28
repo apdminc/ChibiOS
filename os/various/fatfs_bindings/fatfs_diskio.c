@@ -180,7 +180,12 @@ DRESULT disk_read (
     }
     if (sdcRead(&SDCD1, sector, buff, count)) {
       error_log_emmc_disk_io(RES_ERROR, 'R');
-      return RES_ERROR;
+      if (sdcRead(&SDCD1, sector, buff, count)) {
+        error_log_emmc_disk_io(RES_ERROR, 'R');
+        return RES_ERROR;
+      } else {
+        error_log_emmc_disk_io(RES_OK, 'R');
+      }
     }
 
     const systime_t end_time = chTimeNow();
