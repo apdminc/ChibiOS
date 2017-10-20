@@ -862,10 +862,12 @@ static msd_wait_mode_t SCSICommandStartReadWrite10(USBMassStorageDriver *msdp) {
 
 
     if ((!read_success) ) {
-      msd_debug_err_print(msdp->chp, "\r\nSD Block Read Error 1, breaking read sequence, block # %u\r\n", rw_block_address);
+      if( msdp->chp != NULL ) {
+        msd_debug_err_print(msdp->chp, "\r\nSD Block Read Error 1, breaking read sequence, block # %u\r\n", rw_block_address);
 
-      /*wait for printing to finish*/
-      chThdSleepMilliseconds(10);
+        /*wait for printing to finish*/
+        chThdSleepMilliseconds(10);
+      }
 
       msdp->command_succeeded_flag = false;
       msdp->stall_in_endpoint = true;
@@ -886,7 +888,7 @@ static msd_wait_mode_t SCSICommandStartReadWrite10(USBMassStorageDriver *msdp) {
     for (i = 0; i < total_blocks; i++) {
 
       /* transmit the block */
-      //while (usbGetTransmitStatusI(msdp->usbp, msdp->ms_ep_number)) {
+      //for (int q = 0; q < 10000 && usbGetTransmitStatusI(msdp->usbp, msdp->ms_ep_number); q++) {
           //wait for the prior transmit to complete
       //}
       usbPrepareTransmit(msdp->usbp, msdp->ms_ep_number, read_buffer[i % 2],
@@ -917,11 +919,13 @@ static msd_wait_mode_t SCSICommandStartReadWrite10(USBMassStorageDriver *msdp) {
         MSD_R_LED_OFF();
 
         if( !read_success ) {
-          msd_debug_err_print(
+          if( msdp->chp != NULL ) {
+            msd_debug_err_print(
                 msdp->chp, "\r\nSD Block Read Error 22, addr=%d, halting\r\n", rw_block_address);
 
-          /*wait for printing to finish*/
-          chThdSleepMilliseconds(70);
+            /*wait for printing to finish*/
+            chThdSleepMilliseconds(70);
+          }
 
           msdp->command_succeeded_flag = false;
           msdp->stall_in_endpoint = true;
