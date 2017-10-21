@@ -31,7 +31,9 @@
 #include "chprintf.h"
 #include "memstreams.h"
 
-#define MAX_FILLER 11
+
+/* UINT64_MAX is 21 characters long, UINT32_MAX is 11 characters long in base 10 */
+#define MAX_FILLER 21
 #define FLOAT_PRECISION 100000
 
 static char *long_to_string_with_divisor(char *p,
@@ -66,10 +68,86 @@ static char *long_to_string_with_divisor(char *p,
 
   return p;
 }
-
 static char *ltoa(char *p, long num, unsigned radix) {
 
   return long_to_string_with_divisor(p, num, radix, 0);
+}
+
+static char *long_long_to_string_with_divisor(char *p,
+                                         long long num,
+                                         unsigned radix,
+                                         long divisor) {
+  long int i;
+  char *q;
+  long long l, ll;
+
+  l = num;
+  if (divisor == 0) {
+    ll = num;
+  } else {
+    ll = divisor;
+  }
+
+  q = p + MAX_FILLER;
+  do {
+    i = (long int)(l % radix);
+    i += '0';
+    if (i > '9')
+      i += 'A' - '0' - 10;
+    *--q = i;
+    l /= radix;
+  } while ((ll /= radix) != 0);
+
+  i = (long int)(p + MAX_FILLER - q);
+  do
+    *p++ = *q++;
+  while (--i);
+
+  return p;
+}
+
+
+static char *lltoa(char *p, long long num, unsigned radix) {
+
+  return long_long_to_string_with_divisor(p, num, radix, 0);
+}
+
+static char * unsigned_long_long_to_string_with_divisor(char *p,
+                                         unsigned long long num,
+                                         unsigned radix,
+                                         unsigned long divisor) {
+  long int i;
+  char *q;
+  unsigned long long l, ll;
+
+  l = num;
+  if (divisor == 0) {
+    ll = num;
+  } else {
+    ll = divisor;
+  }
+
+  q = p + MAX_FILLER;
+  do {
+    i = (unsigned long int)(l % radix);
+    i += '0';
+    if (i > '9')
+      i += 'A' - '0' - 10;
+    *--q = i;
+    l /= radix;
+  } while ((ll /= radix) != 0);
+
+  i = (unsigned long int)(p + MAX_FILLER - q);
+  do
+    *p++ = *q++;
+  while (--i);
+
+  return p;
+}
+
+static char *ulltoa(char *p, unsigned long long num, unsigned radix) {
+
+  return unsigned_long_long_to_string_with_divisor(p, num, radix, 0);
 }
 
 #if CHPRINTF_USE_FLOAT
@@ -125,7 +203,10 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
   char *p, *s, c, filler;
   int i, precision = 0, width;
   bool_t is_long, left_align;
+  bool_t is_long_long = FALSE;
   long l;
+  long long ll;
+  unsigned long long ull;
 #if CHPRINTF_USE_FLOAT
   float f;
   char tmpbuf[2*MAX_FILLER + 1];
@@ -181,8 +262,15 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
     /* Long modifier.*/
     if (c == 'l' || c == 'L') {
       is_long = TRUE;
-      if (*fmt)
+      if (*fmt) {
         c = *fmt++;
+
+        if (c == 'l' || c == 'L') {
+          is_long_long = TRUE;
+          if (*fmt)
+            c = *fmt++;
+        }
+      }
     }
     else
       is_long = (c >= 'A') && (c <= 'Z');
@@ -206,15 +294,26 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
     case 'd':
     case 'I':
     case 'i':
-      if (is_long)
+      if (is_long_long)
+        ll = va_arg(ap, long long);
+      else if (is_long)
         l = va_arg(ap, long);
       else
         l = va_arg(ap, int);
-      if (l < 0) {
-        *p++ = '-';
-        l = -l;
+
+      if (is_long_long) {
+        if (ll < 0) {
+          *p++ = '-';
+          ll = -ll;
+        }
+        p = lltoa(p, ll, 10);
+      } else {
+        if (l < 0) {
+          *p++ = '-';
+          l = -l;
+        }
+        p = ltoa(p, l, 10);
       }
-      p = ltoa(p, l, 10);
       break;
 #if CHPRINTF_USE_FLOAT
     case 'f':
@@ -248,11 +347,18 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
     case 'o':
       c = 8;
 unsigned_common:
-      if (is_long)
+      if (is_long_long)
+        ull = va_arg(ap, unsigned long long);
+      else if (is_long)
         l = va_arg(ap, unsigned long);
       else
         l = va_arg(ap, unsigned int);
-      p = ltoa(p, l, c);
+
+      if( is_long_long ) {
+        p = ulltoa(p, ull, c);
+      } else {
+        p = ltoa(p, l, c);
+      }
       break;
     default:
       *p++ = c;
