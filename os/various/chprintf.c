@@ -73,44 +73,6 @@ static char *ltoa(char *p, long num, unsigned radix) {
   return long_to_string_with_divisor(p, num, radix, 0);
 }
 
-static char *long_long_to_string_with_divisor(char *p,
-                                         long long num,
-                                         unsigned radix,
-                                         long divisor) {
-  long int i;
-  char *q;
-  long long l, ll;
-
-  l = num;
-  if (divisor == 0) {
-    ll = num;
-  } else {
-    ll = divisor;
-  }
-
-  q = p + MAX_FILLER;
-  do {
-    i = (long int)(l % radix);
-    i += '0';
-    if (i > '9')
-      i += 'A' - '0' - 10;
-    *--q = i;
-    l /= radix;
-  } while ((ll /= radix) != 0);
-
-  i = (long int)(p + MAX_FILLER - q);
-  do
-    *p++ = *q++;
-  while (--i);
-
-  return p;
-}
-
-
-static char *lltoa(char *p, long long num, unsigned radix) {
-
-  return long_long_to_string_with_divisor(p, num, radix, 0);
-}
 
 static char * unsigned_long_long_to_string_with_divisor(char *p,
                                          unsigned long long num,
@@ -304,9 +266,15 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
       if (is_long_long) {
         if (ll < 0) {
           *p++ = '-';
-          ll = -ll;
+          if( ll == INT64_MIN ) {
+            ull = (-(ll + ((long long ) 1))) + ((unsigned long long ) 1);
+          } else {
+            ull = -ll;
+          }
+        } else {
+          ull = ll;
         }
-        p = lltoa(p, ll, 10);
+        p = ulltoa(p, ull, 10);
       } else {
         if (l < 0) {
           *p++ = '-';
