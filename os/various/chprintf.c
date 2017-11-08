@@ -192,7 +192,7 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
       left_align = TRUE;
     }
     filler = ' ';
-    if ((*fmt == '.') || (*fmt == '0')) {
+    if ((*fmt == '0')) {
       fmt++;
       filler = '0';
     }
