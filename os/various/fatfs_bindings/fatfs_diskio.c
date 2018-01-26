@@ -24,6 +24,17 @@ extern SDCDriver SDCD1;
 #error "MMC_SPI or SDC driver must be specified"
 #endif
 
+#if defined(MONITOR_FIRMWARE) || defined(MONITOR_BOOTLOADER)
+  extern void error_log_emmc_disk_io(const DRESULT d, const char function_indicator);
+  extern void sdcard_log_disk_read_time(const systime_t now_time, const systime_t start_time);
+  extern void sdcard_log_disk_write_time(const systime_t now_time, const systime_t start_time);
+#else
+  #define error_log_emmc_disk_io(x, y)
+  #define sdcard_log_disk_read_time(x, y)
+  #define sdcard_log_disk_write_time(x, y)
+#endif
+
+
 #if HAL_USE_RTC
 #include "chrtclib.h"
 extern RTCDriver RTCD1;
@@ -142,11 +153,13 @@ DSTATUS disk_status (
   return STA_NODISK;
 }
 
-extern void error_log_emmc_disk_io(const DRESULT d, const char function_indicator);
+
+
+
 
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
-extern void sdcard_log_disk_read_time(const systime_t now_time, const systime_t start_time);
+
 
 DRESULT disk_read (
     BYTE drv,        /* Physical drive nmuber (0..) */
@@ -216,7 +229,7 @@ DRESULT disk_read (
 /* Write Sector(s)
 */
 
-extern void sdcard_log_disk_write_time(const systime_t now_time, const systime_t start_time);
+
 
 #if _READONLY == 0
 DRESULT disk_write (
