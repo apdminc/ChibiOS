@@ -48,6 +48,7 @@ extern RTCDriver RTCD1;
 
 uint32_t mmc_is_in_sleep_mode = 0;
 
+#if HAL_USE_SDC
 bool disk_wake(SDCDriver *sdcp) {
   bool ret = true;
   if( mmc_is_in_sleep_mode ) {
@@ -64,7 +65,9 @@ bool disk_wake(SDCDriver *sdcp) {
 
   return(ret);
 }
+#endif
 
+#if HAL_USE_SDC
 bool disk_sleep(SDCDriver *sdcp) {
   bool ret = true;
   if( ! mmc_is_in_sleep_mode ) {
@@ -80,6 +83,7 @@ bool disk_sleep(SDCDriver *sdcp) {
   }
   return(ret);
 }
+#endif
 
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
@@ -89,8 +93,6 @@ DSTATUS disk_initialize (
 )
 {
   DSTATUS stat;
-
-
 
   switch (drv) {
 #if HAL_USE_MMC_SPI
