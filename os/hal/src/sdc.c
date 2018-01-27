@@ -77,7 +77,7 @@ bool_t _sdc_wait_for_transfer_state(SDCDriver *sdcp) {
 
   while (TRUE) {
     if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SEND_STATUS,
-                                   sdcp->rca<<16, resp) ||
+                                   sdcp->rca<<SDC_RCA_SHIFT_COUNT, resp) ||
         MMCSD_R1_ERROR(resp[0]))
       return CH_FAILED;
     switch (MMCSD_R1_STS(resp[0])) {
@@ -224,6 +224,8 @@ bool_t sdcConnect(SDCDriver *sdcp) {
     else
 #endif /* SDC_MMC_SUPPORT */
       sdcp->cardmode = SDC_MODE_CARDTYPE_SDV11;
+
+
   }
 
 #if SDC_MMC_SUPPORT
@@ -247,6 +249,7 @@ bool_t sdcConnect(SDCDriver *sdcp) {
 
       chThdSleepMilliseconds(10);
     }
+
   }
   else
 #endif /* SDC_MMC_SUPPORT */
@@ -284,20 +287,30 @@ bool_t sdcConnect(SDCDriver *sdcp) {
     goto failed;
 
   /* Assign relative card address */
+#if SDC_RCA_SHIFT_COUNT != 0
   sdcp->rca = SDC_RELATIVE_CARD_ADDRESS;
+#endif
+
+#if SDC_RCA_SHIFT_COUNT != 0
   if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SEND_RELATIVE_ADDR,
-                                 sdcp->rca<<16, resp) ||
+                                 sdcp->rca<<SDC_RCA_SHIFT_COUNT, resp) ||
       MMCSD_R1_ERROR(resp[0]))
     goto failed;
+#else
+  if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SEND_RELATIVE_ADDR,
+                                 0, &sdcp->rca))
+    goto failed;
+#endif
+
 
   /* Reads CSD.*/
   if (sdc_lld_send_cmd_long_crc(sdcp, MMCSD_CMD_SEND_CSD,
-                                sdcp->rca<<16, sdcp->csd))
+                                sdcp->rca<<SDC_RCA_SHIFT_COUNT, sdcp->csd))
     goto failed;
 
   /* Selects the card for operations.*/
   if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_SEL_DESEL_CARD,
-                                 sdcp->rca<<16, resp))
+                                 sdcp->rca<<SDC_RCA_SHIFT_COUNT, resp))
     goto failed;
 
   /* Block length fixed at 512 bytes.*/
@@ -312,9 +325,10 @@ bool_t sdcConnect(SDCDriver *sdcp) {
   case SDC_MODE_CARDTYPE_SDV20:
 #if SDC_BUS_WIDTH == 4
     sdc_lld_set_bus_mode(sdcp, SDC_MODE_4BIT);
-    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_APP_CMD, sdcp->rca<<16, resp) ||
+    if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_CMD_APP_CMD, sdcp->rca<<SDC_RCA_SHIFT_COUNT, resp) ||
         MMCSD_R1_ERROR(resp[0]))
       goto failed;
+
     if (sdc_lld_send_cmd_short_crc(sdcp, MMCSD_ACMD_SET_BUS_WIDTH, 2, resp) ||
         MMCSD_R1_ERROR(resp[0]))
       goto failed;

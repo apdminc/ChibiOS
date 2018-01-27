@@ -113,6 +113,13 @@
 #endif
 /** @} */
 
+
+#if SDC_RELATIVE_CARD_ADDRESS == 0
+  #define SDC_RCA_SHIFT_COUNT      0
+#else
+  #define SDC_RCA_SHIFT_COUNT      16
+#endif
+
 /*===========================================================================*/
 /* Derived constants and error checks.                                       */
 /*===========================================================================*/
