@@ -222,6 +222,7 @@ void chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
       }
     }
     /* Long modifier.*/
+    is_long_long = FALSE;
     if (c == 'l' || c == 'L') {
       is_long = TRUE;
       if (*fmt) {
