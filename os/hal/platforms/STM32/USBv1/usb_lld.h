@@ -355,6 +355,10 @@ struct USBDriver {
    * @brief   Pointer to the next address in the packet memory.
    */
   uint32_t                      pmnext;
+  /**
+   * Flag indicating that the low level USB perepherial was started successfully.
+   */
+  uint32_t                      usb_start_success;
 };
 
 /*===========================================================================*/

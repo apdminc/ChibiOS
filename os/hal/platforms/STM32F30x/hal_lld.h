@@ -874,7 +874,7 @@
 /**
  * @brief   ADC34 frequency.
  */
-#if (STM32_ADC43PRES == STM32_ADC34PRES_NOCLOCK) || defined(__DOXYGEN__)
+#if (STM32_ADC34PRES == STM32_ADC34PRES_NOCLOCK) || defined(__DOXYGEN__)
 #define STM32_ADC34CLK              0
 #elif STM32_ADC34PRES == STM32_ADC34PRES_DIV1
 #define STM32_ADC34CLK              (STM32_PLLCLKOUT / 1)
