@@ -233,6 +233,13 @@
 #define MMCSD_EXT_CSD_SEC_COUNT                 212
 #define MMCSD_EXT_CSD_BUS_WIDTH                 183
 
+#define MMCSD_EXT_CSD_REVISION                  192
+#define MMCSD_EXT_CSD_FIRMWARE_VERSION          254
+#define MMCSD_EXT_CSD_DEVICE_VERSION            262
+#define MMCSD_EXT_CSD_DEV_LIFETIME_EST_TYP_A    268
+#define MMCSD_EXT_CSD_DEV_LIFETIME_EST_TYP_B    269
+#define MMCSD_EXT_CSD_HEALTH_REPORT             270
+
 
 /** @} */
 
@@ -266,7 +273,11 @@
   /* Card CSD.*/                                                            \
   uint32_t              csd[4];                                             \
   /* Total number of blocks in card.*/                                      \
-  uint32_t              capacity;
+  uint32_t              capacity;                                           \
+  uint8_t               ext_csd_revision;                                   \
+  uint8_t               lifetime_est_a;                                     \
+  uint8_t               lifetime_est_b;
+
 
 /**
  * @extends BaseBlockDeviceVMT
