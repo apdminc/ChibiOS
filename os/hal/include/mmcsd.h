@@ -276,7 +276,7 @@
   /* Total number of blocks in card.*/                                      \
   uint32_t              capacity;                                           \
   uint8_t               ext_csd_revision;                                   \
-  uing8_t               pre_eol;                                            \
+  uint8_t               pre_eol;                                            \
   uint8_t               lifetime_est_a;                                     \
   uint8_t               lifetime_est_b;
 
