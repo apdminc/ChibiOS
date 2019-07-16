@@ -8045,6 +8045,7 @@ typedef struct
 
 /********************  Bits definition for RTC_ISR register  ******************/
 #define RTC_ISR_RECALPF                      ((uint32_t)0x00010000)
+#define RTC_ISR_TAMP2F                       ((uint32_t)0x00004000)
 #define RTC_ISR_TAMP1F                       ((uint32_t)0x00002000)
 #define RTC_ISR_TSOVF                        ((uint32_t)0x00001000)
 #define RTC_ISR_TSF                          ((uint32_t)0x00000800)
@@ -8247,6 +8248,8 @@ typedef struct
 #define RTC_TAFCR_TAMPFREQ_0                 ((uint32_t)0x00000100)
 #define RTC_TAFCR_TAMPFREQ_1                 ((uint32_t)0x00000200)
 #define RTC_TAFCR_TAMPFREQ_2                 ((uint32_t)0x00000400)
+#define RTC_TAFCR_TAMP2TRG                   ((uint32_t)0x00000010)
+#define RTC_TAFCR_TAMP2E                     ((uint32_t)0x00000008)
 #define RTC_TAFCR_TAMPTS                     ((uint32_t)0x00000080)
 #define RTC_TAFCR_TAMPIE                     ((uint32_t)0x00000004)
 #define RTC_TAFCR_TAMP1TRG                   ((uint32_t)0x00000002)
