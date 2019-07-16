@@ -131,6 +131,7 @@ void sdcObjectInit(SDCDriver *sdcp) {
   sdcp->config   = NULL;
   sdcp->capacity = 0;
   sdcp->ext_csd_revision = 0;
+  sdcp->pre_eol = 0;
   sdcp->lifetime_est_a = 0;
   sdcp->lifetime_est_b = 0;
 }
@@ -378,6 +379,11 @@ bool_t sdcConnect(SDCDriver *sdcp) {
   if (sdcp->cardmode == (SDC_MODE_CARDTYPE_MMC | SDC_MODE_HIGH_CAPACITY)) {
     chThdSleep(MS2ST(1));
     if (sdc_lld_read_ext_csd(sdcp, (uint8_t*)&sdcp->ext_csd_revision, MMCSD_EXT_CSD_REVISION, sizeof(sdcp->ext_csd_revision)) == CH_FAILED) {
+
+    }
+
+    chThdSleep(MS2ST(1));
+    if (sdc_lld_read_ext_csd(sdcp, (uint8_t*)&sdcp->pre_eol, MMCSD_EXT_CSD_PRE_EOL, sizeof(sdcp->pre_eol)) == CH_FAILED) {
 
     }
 
