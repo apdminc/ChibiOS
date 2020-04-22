@@ -201,13 +201,17 @@ static void serve_interrupt(SerialDriver *sdp) {
 
   /* Physical transmission end.*/
   if (sr & USART_SR_TC) {
+    /* This block of code is altered to combine a slightly different version of butfix #503 from the Chibios 2.6.8 release.*/
     chSysLockFromIsr();
-    chnAddFlagsI(sdp, CHN_TRANSMISSION_END);
-    chSysUnlockFromIsr();
-    u->CR1 = cr1 & ~(USART_CR1_TXEIE | USART_CR1_TCIE);
+    if( chOQIsEmptyI(&sdp->oqueue) ) {
+      chnAddFlagsI(sdp, CHN_TRANSMISSION_END);
+      u->CR1 = cr1 & ~(USART_CR1_TXEIE | USART_CR1_TCIE);
+    }
     u->SR = ~USART_SR_TC;
+    chSysUnlockFromIsr();
   }
 }
+
 
 #if STM32_SERIAL_USE_USART1 || defined(__DOXYGEN__)
 static void notify1(GenericQueue *qp) {
