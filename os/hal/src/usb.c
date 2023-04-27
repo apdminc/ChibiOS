@@ -50,6 +50,9 @@ static const uint8_t zero_status[] = {0x00, 0x00};
 static const uint8_t active_status[] ={0x00, 0x00};
 static const uint8_t halted_status[] = {0x01, 0x00};
 
+
+volatile usb_lld_pump_status_t current_lld_pump_status = USB_LLD_PUMP_STATUS_UNKNOWN;
+
 /*===========================================================================*/
 /* Driver local functions.                                                   */
 /*===========================================================================*/
@@ -282,6 +285,17 @@ void usbStart(USBDriver *usbp, const USBConfig *config) {
 
   chDbgCheck((usbp != NULL) && (config != NULL), "usbStart");
 
+
+  for(int i = 0; i < 100 && current_lld_pump_status == USB_LLD_PUMP_STATUS_PUMPING; i++ ) {
+  	//For LLD drivers that have FIFO data pumps, we need to wait till the pump stops before considering the USB driver to be shut down.
+  	chThdSleepMilliseconds(1);
+  }
+  if( current_lld_pump_status == USB_LLD_PUMP_STATUS_PUMPING ) {
+	//Leave the driver in the current state (probably USB_STOP). This avoids thread race conditions and hard faults in the txfifo pump LLD driver.
+	return;
+  }
+
+
   chSysLock();
   chDbgAssert((usbp->state == USB_STOP) || (usbp->state == USB_READY),
               "usbStart(), #1", "invalid state");
@@ -317,6 +331,12 @@ void usbStop(USBDriver *usbp) {
   usb_lld_stop(usbp);
   usbp->state = USB_STOP;
   chSysUnlock();
+
+  chThdSleepMilliseconds(2);
+  for(int i = 0; i < 100 && current_lld_pump_status == USB_LLD_PUMP_STATUS_PUMPING; i++ ) {
+	//For LLD drivers that have FIFO data pumps, we need to wait till the pump stops before considering the USB driver to be shut down.
+	chThdSleepMilliseconds(1);
+  }
 }
 
 /**

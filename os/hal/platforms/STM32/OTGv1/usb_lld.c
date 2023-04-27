@@ -112,6 +112,11 @@ static const stm32_otg_params_t hsparams = {
 };
 #endif
 
+
+
+
+
+
 /*===========================================================================*/
 /* Driver local functions.                                                   */
 /*===========================================================================*/
@@ -524,19 +529,29 @@ static void otg_rxfifo_handler(USBDriver *usbp) {
  * @notapi
  */
 static bool_t otg_txfifo_handler(USBDriver *usbp, usbep_t ep) {
+  const USBEndpointConfig *epcPtr = usbp->epc[ep];
+  if( epcPtr == NULL || usbp->state == USB_STOP ) {
+	return(TRUE);
+  }
+
 
   /* The TXFIFO is filled until there is space and data to be transmitted.*/
   while (TRUE) {
     uint32_t n;
 
+    if( usbp->epc[ep] == NULL || usbp->state == USB_STOP ) {
+      //Note: the USB driver may be stopped while the txfifo handler is running, this terminates the FIFO handling process.
+      return(TRUE);
+    }
+
     /* Transaction end condition.*/
-    if (usbp->epc[ep]->in_state->txcnt >= usbp->epc[ep]->in_state->txsize)
+    if (epcPtr->in_state->txcnt >= epcPtr->in_state->txsize)
       return TRUE;
 
     /* Number of bytes remaining in current transaction.*/
-    n = usbp->epc[ep]->in_state->txsize - usbp->epc[ep]->in_state->txcnt;
-    if (n > usbp->epc[ep]->in_maxsize)
-      n = usbp->epc[ep]->in_maxsize;
+    n = epcPtr->in_state->txsize - epcPtr->in_state->txcnt;
+    if (n > epcPtr->in_maxsize)
+      n = epcPtr->in_maxsize;
 
     /* Checks if in the TXFIFO there is enough space to accommodate the
        next packet.*/
@@ -546,26 +561,33 @@ static bool_t otg_txfifo_handler(USBDriver *usbp, usbep_t ep) {
 #if STM32_USB_OTGFIFO_FILL_BASEPRI
     __set_BASEPRI(CORTEX_PRIORITY_MASK(STM32_USB_OTGFIFO_FILL_BASEPRI));
 #endif
+
+    if( usbp->epc[ep] == NULL || usbp->state == USB_STOP ) {
+      //Note: the USB driver may be stopped while the txfifo handler is running, this terminates the FIFO handling process.
+      return(TRUE);
+    }
+
     /* Handles the two cases: linear buffer or queue.*/
-    if (usbp->epc[ep]->in_state->txqueued) {
+    if (epcPtr->in_state->txqueued) {
       /* Queue associated.*/
       otg_fifo_write_from_queue(usbp->otg->FIFO[ep],
-                                usbp->epc[ep]->in_state->mode.queue.txqueue,
+                                epcPtr->in_state->mode.queue.txqueue,
                                 n);
     }
     else {
       /* Linear buffer associated.*/
       otg_fifo_write_from_buffer(usbp->otg->FIFO[ep],
-                                 usbp->epc[ep]->in_state->mode.linear.txbuf,
+                                 epcPtr->in_state->mode.linear.txbuf,
                                  n);
-      usbp->epc[ep]->in_state->mode.linear.txbuf += n;
+      epcPtr->in_state->mode.linear.txbuf += n;
     }
-    usbp->epc[ep]->in_state->txcnt += n;
+    epcPtr->in_state->txcnt += n;
   }
 #if STM32_USB_OTGFIFO_FILL_BASEPRI
   __set_BASEPRI(0);
 #endif
 }
+
 
 /**
  * @brief   Generic endpoint IN handler.
@@ -711,7 +733,7 @@ static void usb_lld_serve_interrupt(USBDriver *usbp) {
   }
 
   if( sts & GINTSTS_USBSUSP ) {
-    /*TODO Implement suspend mode, need to do more stuff to the OTG perepherial.*/
+    /*TODO Implement suspend mode, need to do more stuff to the OTG peripheral.*/
     _usb_isr_invoke_event_cb(usbp, USB_EVENT_SUSPEND);
   }
 
@@ -784,6 +806,9 @@ static void usb_lld_serve_interrupt(USBDriver *usbp) {
   }
 }
 
+
+
+
 /*===========================================================================*/
 /* Driver interrupt handlers and threads.                                    */
 /*===========================================================================*/
@@ -791,6 +816,10 @@ static void usb_lld_serve_interrupt(USBDriver *usbp) {
 static msg_t usb_lld_pump(void *p) {
   USBDriver *usbp = (USBDriver *)p;
   stm32_otg_t *otgp = usbp->otg;
+
+  extern volatile usb_lld_pump_status_t current_lld_pump_status;
+
+  current_lld_pump_status = USB_LLD_PUMP_STATUS_IDLE;
 
   chRegSetThreadName("usb_lld_pump");
   chSysLock();
@@ -805,15 +834,16 @@ static msg_t usb_lld_pump(void *p) {
       usbp->thd_wait = chThdSelf();
       chSchGoSleepS(THD_STATE_SUSPENDED);
     }
+    current_lld_pump_status = USB_LLD_PUMP_STATUS_PUMPING;
     chSysUnlock();
 
     /* Checks if there are TXFIFOs to be filled.*/
-    for (ep = 0; ep <= usbp->otgparams->num_endpoints; ep++) {
-
+    for (ep = 0; ep <= usbp->otgparams->num_endpoints && usbp->state != USB_STOP; ep++) {
       /* Empties the RX FIFO.*/
       while (otgp->GINTSTS & GINTSTS_RXFLVL) {
         otg_rxfifo_handler(usbp);
       }
+
 
       epmask = (1 << ep);
       if (usbp->txpending & epmask) {
@@ -840,6 +870,8 @@ static msg_t usb_lld_pump(void *p) {
         chSysUnlock();
       }
     }
+    current_lld_pump_status = USB_LLD_PUMP_STATUS_IDLE;
+
     chSysLock();
   }
   chSysUnlock();

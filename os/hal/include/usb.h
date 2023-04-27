@@ -275,6 +275,14 @@ typedef enum {
   USB_EVENT_STALLED = 5                 /**< Endpoint 0 error, stalled.     */
 } usbevent_t;
 
+
+typedef enum {
+  USB_LLD_PUMP_STATUS_UNKNOWN = 0,
+  USB_LLD_PUMP_STATUS_PUMPING,
+  USB_LLD_PUMP_STATUS_IDLE
+} usb_lld_pump_status_t;
+
+
 /**
  * @brief   Type of an USB descriptor.
  */
