@@ -374,10 +374,14 @@ struct context {
  */
 #if !CORTEX_SIMPLIFIED_PRIORITY || defined(__DOXYGEN__)
 #if CH_OPTIMIZE_SPEED || defined(__DOXYGEN__)
+#ifdef SAST_IGNORE_CODE
+#define port_lock() ;
+#else
 #define port_lock() {                                                       \
   register uint32_t tmp asm ("r3") = CORTEX_BASEPRI_KERNEL;                 \
   asm volatile ("msr     BASEPRI, %0" : : "r" (tmp) : "memory");            \
 }
+#endif
 #else /* !CH_OPTIMIZE_SPEED */
 #define port_lock() {                                                       \
   asm volatile ("bl      _port_lock" : : : "r3", "lr", "memory");           \
@@ -387,6 +391,7 @@ struct context {
 #define port_lock() asm volatile ("cpsid   i" : : : "memory")
 #endif /* CORTEX_SIMPLIFIED_PRIORITY */
 
+
 /**
  * @brief   Kernel-unlock action.
  * @details Usually this function just enables interrupts but may perform
@@ -395,10 +400,14 @@ struct context {
  */
 #if !CORTEX_SIMPLIFIED_PRIORITY || defined(__DOXYGEN__)
 #if CH_OPTIMIZE_SPEED || defined(__DOXYGEN__)
+#ifdef SAST_IGNORE_CODE
+#define port_unlock() ;
+#else
 #define port_unlock() {                                                     \
   register uint32_t tmp asm ("r3") = CORTEX_BASEPRI_DISABLED;               \
   asm volatile ("msr     BASEPRI, %0" : : "r" (tmp) : "memory");            \
 }
+#endif
 #else /* !CH_OPTIMIZE_SPEED */
 #define port_unlock() {                                                     \
   asm volatile ("bl      _port_unlock" : : : "r3", "lr", "memory");         \
@@ -454,11 +463,15 @@ struct context {
  * @note    In this port it lowers the base priority to user level.
  */
 #if !CORTEX_SIMPLIFIED_PRIORITY || defined(__DOXYGEN__)
+#ifdef SAST_IGNORE_CODE
+#define port_enable() ;
+#else
 #define port_enable() {                                                     \
   register uint32_t tmp asm ("r3") = CORTEX_BASEPRI_DISABLED;               \
   asm volatile ("msr     BASEPRI, %0                    \n\t"               \
                 "cpsie   i" : : "r" (tmp) : "memory");                      \
 }
+#endif
 #else /* CORTEX_SIMPLIFIED_PRIORITY */
 #define port_enable() asm volatile ("cpsie   i" : : : "memory")
 #endif /* CORTEX_SIMPLIFIED_PRIORITY */
